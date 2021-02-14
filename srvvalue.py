@@ -12,7 +12,7 @@ currentPath = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s %(message)s', filename=currentPath+'/tempsrv.log')
 
 db = orm.Database()
-db.bind(provider='mysql', host='localhost', user='temperatur_user', passwd='temperatur_password', db='temperaturdb')
+db.bind(provider='mysql', host='temperatur', user='temperatur_user', passwd='temperatur_password', db='temperaturdb')
 
 class Temperatur(db.Entity):
     zeit = orm.Required(datetime, sql_default='CURRENT_TIMESTAMP')

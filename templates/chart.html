@@ -15,23 +15,46 @@
   </div>
 
   <script>
-    let myChart = document.getElementById('myChart').getContext('2d');
+    $(function () {
 
-    // Global Options
-    Chart.defaults.global.defaultFontFamily = 'Lato';
-    Chart.defaults.global.defaultFontSize = 18;
-    Chart.defaults.global.defaultFontColor = '#777';
+      let myChart = document.getElementById('myChart').getContext('2d');
 
-    let lLineChart = new Chart(myChart, {
-        type: 'line',
-	data: {
-		labels: ['A', 'B', 'C', 'D', 'E'],
-		datasets: [{
-                    data: [10,20,30,25,5]
-		}]		    
-	}
-    });
- 
+      let json_url = "temp/100";
+      
+      // Global Options
+      Chart.defaults.global.defaultFontFamily = 'Lato';
+      Chart.defaults.global.defaultFontSize = 18;
+      Chart.defaults.global.defaultFontColor = '#777';
+
+      let lineChart = new Chart(myChart, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              { label: 't1', data: [] },
+              { label: 't2', data: [] },
+              { label: 't3', data: [] }
+            ]	
+          }
+        });	    
+            
+      ajax_chart(lineChart, json_url);
+
+      // function to update our chart
+      function ajax_chart(chart, url, data) {
+          var data = data || {};
+
+          $.getJSON(url, data).done(function(response) {
+            for (const t of response) {
+              chart.data.labels.push(t.zeit);
+              chart.data.datasets[0].data.push(t.t1);
+              chart.data.datasets[1].data.push(t.t2);
+              chart.data.datasets[2].data.push(t.t3);
+            }
+            chart.update(); // finally update our chart
+          });
+      }
+  });
   </script>
 </body>
 </html>
