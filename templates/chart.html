@@ -2,16 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+  <title>Temperaturen</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.de.min.js"></script>
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+
+  <style>
+    .col-md-1 {
+      margin: 5px;
+    }
+    .col-md-3 {
+      padding: 8px;
+    }
+
+  </style>
   <title>My Chart.js Chart</title>
 </head>
 <body>
-  <div class="container">
-    <canvas id="myChart"></canvas>
+  <div class="container-fluid">
+    <div class="form-horizontal">
+      <button type="button" id="btn_24h" class="col-md-1 btn btn-primary" onclick="clicked()">Last 24h</button>
+      <button type="button" class="col-md-1 btn btn-primary">Last 7 days</button>
+      <button type="button" class="col-md-1 btn btn-primary">Last month</button>
+      <button type="button" class="col-md-1 btn btn-primary">Last year</button>
+      <div class="col-md-3 input-daterange input-group" id="datepicker">
+        <input type="text" class="input-sm form-control" name="start" />
+        <span class="input-group-addon">to</span>
+        <input type="text" class="input-sm form-control" name="end" />
+    </div>
+    <div class="row">
+      <canvas id="myChart"></canvas>
+    </div>
   </div>
 
   <script>
@@ -19,34 +52,74 @@
 
       let myChart = document.getElementById('myChart').getContext('2d');
 
-      let json_url = "temp/100";
-      
-      // Global Options
-      Chart.defaults.global.defaultFontFamily = 'Lato';
-      Chart.defaults.global.defaultFontSize = 18;
-      Chart.defaults.global.defaultFontColor = '#777';
-
       let lineChart = new Chart(myChart, {
           type: 'line',
           data: {
             labels: [],
             datasets: [
-              { label: 't1', data: [] },
-              { label: 't2', data: [] },
-              { label: 't3', data: [] }
+              { label: 't1',
+                fill: false,
+                backgroundColor: "rgba(255,0,0,1)",
+                borderColor: "rgba(255,0,0,1)",
+                lineTension: 0.5,
+                data: [] },
+              { label: 't2', 
+                fill: false,
+                backgroundColor: "rgba(0,255,0,1)",
+                borderColor: "rgba(0,255,0,1)",
+                data: [] },
+              { label: 't3',
+                fill: false, 
+                backgroundColor: "rgba(0,0,255,1)",
+                borderColor: "rgba(0,0,255,1)",
+                data: [] }
             ]	
+          },
+          options: {
+            scales: {
+              xAxes: [{
+                  type: "time",
+                  time: {
+                    displayFormats: {
+                      minute: 'hh:mm',
+                      hour: 'D. MMM hh:mm'
+                    }
+                },
+                display: true,
+              }],
+              yAxes: [{
+                ticks: {
+                  suggestedMin: 0,
+                  suggestedMax: 25
+                }
+              }]
+            },
+            elements: {
+                    point:{
+                        radius: 0
+                    }
+                }
           }
         });	    
             
-      ajax_chart(lineChart, json_url);
+        
+      const date1 = new Date('2021-02-05T15:00:00.00Z');
+      const date2 = new Date('2021-02-07T19:00:00.00Z');
 
+      loadChartData(lineChart, date1, date2);
+
+      document.getElementById('btn_24h').onclick = function() {
+        var date1 = new Date();
+        var date2 = new Date();
+        date2.setDate(date1.getDate() -1);
+        $loadChartData(lineChart, date1)
+      };
+      
       // function to update our chart
-      function ajax_chart(chart, url, data) {
-          var data = data || {};
-
-          $.getJSON(url, data).done(function(response) {
+      function loadChartData(chart, from, to) {
+          $.getJSON('temp/'+from.toISOString()+'/'+to.toISOString()).done(function(response) {
             for (const t of response) {
-              chart.data.labels.push(t.zeit);
+              chart.data.labels.push(new Date(t.zeit));
               chart.data.datasets[0].data.push(t.t1);
               chart.data.datasets[1].data.push(t.t2);
               chart.data.datasets[2].data.push(t.t3);
@@ -54,7 +127,13 @@
             chart.update(); // finally update our chart
           });
       }
-  });
+
+      $('.input-daterange').datepicker({
+          format: "dd.mm.yy",
+          todayHighlight: true,
+      });  
+
+    });
   </script>
 </body>
 </html>

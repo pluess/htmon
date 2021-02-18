@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 import simplejson as json
 from flask import render_template
+import dateutil.parser
 
 currentPath = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s %(message)s', filename=currentPath+'/tempsrv.log')
@@ -23,11 +24,18 @@ class Temperatur(db.Entity):
 db.generate_mapping(create_tables=True)
 app = Flask(__name__)
 
-@app.route('/temp/<number>')
-def temp(number):
+@app.route('/temp/<fromd>/<tod>')
+def temp(fromd, tod):
+    orm.set_sql_debug(True)
+    fromDatetime = dateutil.parser.isoparse(fromd)
+    toDatetime = dateutil.parser.isoparse(tod)
+    logging.debug(fromDatetime)
+    logging.debug(toDatetime)
     with orm.db_session():
-        tList = orm.select(t for t in Temperatur)[:int(number)]
-        result = [t.to_dict() for t in tList]
+        tList = orm.select(t for t in Temperatur if t.zeit >= fromDatetime and t.zeit <= toDatetime)[:]
+        result = [t.to_dict(exclude='zeit') for t in tList]
+        for i in range(len(result)):
+            result[i]['zeit'] = tList[i].zeit.isoformat()
         return jsonify(result)
 
 @app.route('/chart')
