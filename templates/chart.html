@@ -28,15 +28,15 @@
     }
 
   </style>
-  <title>My Chart.js Chart</title>
+  <title>Temperature Chart</title>
 </head>
 <body>
   <div class="container-fluid">
     <div class="form-horizontal">
-      <button type="button" id="btn_24h" class="col-md-1 btn btn-primary" onclick="clicked()">Last 24h</button>
-      <button type="button" class="col-md-1 btn btn-primary">Last 7 days</button>
-      <button type="button" class="col-md-1 btn btn-primary">Last month</button>
-      <button type="button" class="col-md-1 btn btn-primary">Last year</button>
+      <button type="button" id="btn_24h" class="col-md-1 btn btn-primary">Last 24h</button>
+      <button type="button" id="btn_7d" class="col-md-1 btn btn-primary">Last 7 days</button>
+      <button type="button" id="btn_30d" class="col-md-1 btn btn-primary">Last month</button>
+      <button type="button" id="btn_365d" class="col-md-1 btn btn-primary">Last year</button>
       <div class="col-md-3 input-daterange input-group" id="datepicker">
         <input type="text" class="input-sm form-control" name="start" />
         <span class="input-group-addon">to</span>
@@ -105,19 +105,27 @@
         
       const date1 = new Date('2021-02-05T15:00:00.00Z');
       const date2 = new Date('2021-02-07T19:00:00.00Z');
-
       loadChartData(lineChart, date1, date2);
 
-      document.getElementById('btn_24h').onclick = function() {
+      function loadChartByDeltaDays(deltaDays) {
         var date1 = new Date();
         var date2 = new Date();
-        date2.setDate(date1.getDate() -1);
-        $loadChartData(lineChart, date1)
-      };
-      
+        date2.setDate(date1.getDate() - deltaDays);
+        loadChartData(lineChart, date2, date1)
+      }
+
+      $('#btn_24h').click(function(){ loadChartByDeltaDays(1);});
+      $('#btn_7d').click(function(){ loadChartByDeltaDays(7);});
+      $('#btn_30d').click(function(){ loadChartByDeltaDays(30);});
+      $('#btn_365d').click(function(){ loadChartByDeltaDays(365);});
+
       // function to update our chart
       function loadChartData(chart, from, to) {
           $.getJSON('temp/'+from.toISOString()+'/'+to.toISOString()).done(function(response) {
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.data.datasets[1].data = [];
+            chart.data.datasets[2].data = [];
             for (const t of response) {
               chart.data.labels.push(new Date(t.zeit));
               chart.data.datasets[0].data.push(t.t1);
