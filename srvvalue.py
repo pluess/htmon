@@ -24,19 +24,33 @@ class Temperatur(db.Entity):
 db.generate_mapping(create_tables=True)
 app = Flask(__name__)
 
-@app.route('/temp/<fromd>/<tod>')
-def temp(fromd, tod):
+@app.route('/temp/<fromd>/<tod>/<samples>')
+def temp(fromd, tod, samples):
     orm.set_sql_debug(True)
     fromDatetime = dateutil.parser.isoparse(fromd)
     toDatetime = dateutil.parser.isoparse(tod)
-    logging.debug(fromDatetime)
-    logging.debug(toDatetime)
+    logging.debug('fromDatetime=%s', fromDatetime)
+    logging.debug('toDatetime=%s', toDatetime)
     with orm.db_session():
         tList = orm.select(t for t in Temperatur if t.zeit >= fromDatetime and t.zeit <= toDatetime)[:]
-        result = [t.to_dict(exclude='zeit') for t in tList]
+        logging.debug('len(tList)=%d', len(tList))
+        sampleStep = int(len(tList) / int(samples))
+        logging.debug('sampleStep=%d', sampleStep)
+        i = 0
+        result = []
+        while i<len(tList):
+            r = tList[i].to_dict(exclude='zeit')
+            r['zeit'] = tList[i].zeit.isoformat()
+            result.append(r)
+            i += sampleStep
+        logging.debug('len(result)=%d', len(result))
+        return jsonify(result)
+
+"""         result = [t.to_dict(exclude='zeit') for t in tList]
         for i in range(len(result)):
             result[i]['zeit'] = tList[i].zeit.isoformat()
-        return jsonify(result)
+             return jsonify(result)
+"""        
 
 @app.route('/chart')
 def hello():

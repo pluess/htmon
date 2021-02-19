@@ -24,11 +24,14 @@
       float: left;
       padding: 3px;
     }
+    #samples {
+      padding: 3px;
+    }
   </style>
   <title>Temperature Chart</title>
 </head>
 <body>
-  <div class="container-fluid">
+  <div class="container-fluid w-100 p-3">
     <div class="row">
       <div class="col-xs-4"> 
         <button type="button" id="btn_24h" class="btn btn-primary">Last 24h</button>
@@ -43,6 +46,9 @@
       </div>
       <div class="col-xs-1"> 
         <button type="button" id="btn_ok" class="btn btn-primary">Ok</button>
+      </div>
+      <div class="col-xs-1" id="samples"> 
+        <input type="number" class="input-sm" name="samples" value="100"/>
       </div>
     </div>
     <div class="row">
@@ -110,7 +116,7 @@
             
       const date1 = new Date('2021-02-05T15:00:00.00Z');
       const date2 = new Date('2021-02-07T19:00:00.00Z');
-      loadChartData(lineChart, date1, date2);
+      loadChartData(lineChart, date1, date2, $("input[name='samples']").val());
 
       $("input[name='start']").val('05.02.21');
       $("input[name='end']").val('07.02.21');
@@ -119,7 +125,7 @@
         var date1 = new Date();
         var date2 = new Date();
         date2.setDate(date1.getDate() - deltaDays);
-        loadChartData(lineChart, date2, date1)
+        loadChartData(lineChart, date2, date1, $("input[name='samples']").val());
       }
 
       $('#btn_24h').click(function(){ loadChartByDeltaDays(1);});
@@ -132,12 +138,12 @@
         var date2String = $("input[name='end']").val();
         var date1 = moment(date1String, "DD.MM.YYYY");
         var date2 = moment(date2String, "DD.MM.YYYY");
-        loadChartData(lineChart, date1, date2)
+        loadChartData(lineChart, date1, date2, $("input[name='samples']").val())
       });
 
       // function to update our chart
-      function loadChartData(chart, from, to) {
-          $.getJSON('temp/'+from.toISOString()+'/'+to.toISOString()).done(function(response) {
+      function loadChartData(chart, from, to, samples=100) {
+          $.getJSON('temp/'+from.toISOString()+'/'+to.toISOString()+'/'+samples.toString()).done(function(response) {
             chart.data.labels = [];
             chart.data.datasets[0].data = [];
             chart.data.datasets[1].data = [];
